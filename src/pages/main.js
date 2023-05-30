@@ -16,7 +16,7 @@ const Main = () => {
   };
 
   const handleOptionChange = (option) => {
-    setSelectedOption(option.value);
+    setSelectedOption(option);
   };
 
   const handleSubmit = async () => {
