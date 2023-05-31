@@ -1,28 +1,34 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, TextInput, Button, TouchableOpacity, Text } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
+import { Calendar, LocaleConfig } from 'react-native-calendars';
+import DatePicker from 'react-native-date-picker'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../services/api';
 
 const Main = () => {
-  const [selectedDate, setSelectedDate] = useState('');
   const [selectedOption, setSelectedOption] = useState('hourly');
   const [chartData, setChartData] = useState(null);
   const [chartVisible, setChartVisible] = useState(false);
 
+  const now = new Date();
+  now.setHours(now.getHours() - 3);
 
-  const handleDateChange = (date) => {
-    setSelectedDate(date);
-  };
+  const [date, setDate] = useState(now)
+  const [open, setOpen] = useState(false)
+  const formattedDate = date ? date.toDateString() : 'Selecione a data';
 
   const handleOptionChange = (option) => {
     setSelectedOption(option);
   };
 
   const handleSubmit = async () => {
-    console.log('Selected Date:', selectedDate);
+    console.log('Selected Date:', date);
     console.log('Selected Option:', selectedOption);
 
+    const dateYMD = date.toISOString().slice(0, 10);
+
+    console.log('Selected Date', dateYMD);
     // const token = await AsyncStorage.getItem('token');
     // const headersList = {
     //   "Accept": "*/*",
@@ -30,23 +36,24 @@ const Main = () => {
     //   "Authorization": `Bearer ${token}`
     // }
 
-    // const response = api.get(`/products/1/consumption?type={selectedOption}&date=${selectedDate ? selectedDate : '2023-05-25'}`, headersList);
+    // const response = api.get(`/products/1/consumption?type={selectedOption}&date=${dateYMD}`, headersList);
+    // console.log('Response:', response);
 
     const resultMock = {
       consumptionInKw: {
-        data: [15, 20, 30, 8, 97, 46, 71, 89, 10, 5, 84, 6, 15, 20, 30],
+        data: [79, 12, 45, 64, 92, 30, 57, 81, 9, 37, 68, 23, 98, 51, 76],
         averag: 15,
         mode: 10
       },
 
       consumptionInMoney: {
-        data: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8],
+        data: [79, 12, 45, 64, 92, 30, 57, 81, 9, 37, 68, 23, 98, 51, 76],
         averag: 15,
         mode: 10
       }
     }
 
-    console.log('Response:', resultMock);
+    //console.log('Response:', resultMock);
 
     setChartVisible(true);
     setChartData(resultMock.consumptionInKw.data);
@@ -64,27 +71,25 @@ const Main = () => {
     },
   ];
 
-  const renderChart = () => {
-    if (chartVisible) {
-      return (
-        <View>
-          <Text style={styles.title}>Consumo de Energia</Text> {/* Envolve o título com o componente <Text> */}
-          {/* Restante do código do gráfico */}
-        </View>
-      );
-    }
-    return null;
-  };
-
   return (
     <View style={styles.container}>
       <View style={styles.topContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Selecione a data (yyyy-mm-dd)"
-          value={selectedDate}
-          onChangeText={handleDateChange}
-        />
+        <View style={styles.calendar}>
+          <Button title={formattedDate} onPress={() => setOpen(true)} />
+          <DatePicker
+            modal
+            open={open}
+            date={date}
+            mode="date"
+            onConfirm={(date) => {
+              setOpen(false)
+              setDate(date)
+            }}
+            onCancel={() => {
+              setOpen(false)
+            }}
+          />
+        </View>
 
         <View style={[styles.optionsContainer, styles.horizontalOptionsContainer]}>
           {options.map((option, index) => (
@@ -111,7 +116,7 @@ const Main = () => {
       </View>
 
       <View style={styles.buttonContainer}>
-        <Button title="Enviar" onPress={handleSubmit} />
+        <Button title="Buscar" onPress={handleSubmit} />
       </View>
 
       <View style={styles.chartContainer}>
@@ -193,7 +198,8 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     width: '80%',
-    marginTop: 12,
+    marginTop: 8,
+    marginBottom: 16
   },
   chartContainer: {
     marginTop: 16,
@@ -202,6 +208,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: 'bold',
+    marginBottom: 16,
+  },
+  calendar: {
+    width: '100%',
+    marginTop: 8,
     marginBottom: 16,
   }
 });
