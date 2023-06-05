@@ -29,35 +29,36 @@ const Main = () => {
     const dateYMD = date.toISOString().slice(0, 10);
 
     console.log('Selected Date', dateYMD);
-    // const token = await AsyncStorage.getItem('token');
-    // const headersList = {
-    //   "Accept": "*/*",
-    //   "Content-Type": "application/json",
-    //   "Authorization": `Bearer ${token}`
-    // }
+    const token = await AsyncStorage.getItem('token');
+    console.log(token)
 
-    // const response = api.get(`/products/1/consumption?type={selectedOption}&date=${dateYMD}`, headersList);
-    // console.log('Response:', response);
-
-    const resultMock = {
-      consumptionInKw: {
-        data: [79, 12, 45, 64, 92, 30, 57, 81, 9, 37, 68, 23, 98, 51, 76],
-        averag: 15,
-        mode: 10
-      },
-
-      consumptionInMoney: {
-        data: [79, 12, 45, 64, 92, 30, 57, 81, 9, 37, 68, 23, 98, 51, 76],
-        averag: 15,
-        mode: 10
-      }
+    let headersList = {
+      "Accept": "*/*",
+      "Authentication": `${token}`,
+      "Authorization": `Bearer ${token}`
     }
+
+    const response = await api.get(`/products/1/consumptions?type=${selectedOption}&date=${dateYMD}`, { headers: headersList });
+    console.log(response.data);
+
+    // const resultMock = {
+    //   consumptionInKw: {
+    //     data: [79, 12, 45, 64, 92, 30, 57, 81, 9, 37, 68, 23, 98, 51, 76],
+    //     averag: 15,
+    //     mode: 10
+    //   },
+
+    //   consumptionInMoney: {
+    //     data: [79, 12, 45, 64, 92, 30, 57, 81, 9, 37, 68, 23, 98, 51, 76],
+    //     averag: 15,
+    //     mode: 10
+    //   }
+    // }
 
     //console.log('Response:', resultMock);
 
     setChartVisible(true);
-    setChartData(resultMock.consumptionInKw.data);
-
+    setChartData(response.data.consumptionsInKw.data.slice(0, 18));
   };
 
   const options = [
