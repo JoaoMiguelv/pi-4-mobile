@@ -1,64 +1,65 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, TextInput, Button, TouchableOpacity, Text } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  TextInput,
+  Button,
+  TouchableOpacity,
+  Text,
+} from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
-import DatePicker from 'react-native-date-picker'
+import DatePicker from 'react-native-date-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../services/api';
 
 const Main = () => {
   const [selectedOption, setSelectedOption] = useState('hourly');
+  const [selectedGraph, setSelectedGraph] = useState('money');
   const [chartData, setChartData] = useState(null);
   const [chartVisible, setChartVisible] = useState(false);
-
-  const now = new Date();
-  now.setHours(now.getHours() - 3);
-
-  const [date, setDate] = useState(now)
-  const [open, setOpen] = useState(false)
-  const formattedDate = date ? date.toDateString() : 'Selecione a data';
+  const [date, setDate] = useState(new Date());
+  const [open, setOpen] = useState(false);
 
   const handleOptionChange = (option) => {
     setSelectedOption(option);
   };
 
+  const handleGraphChange = (graph) => {
+    setSelectedGraph(graph);
+  };
+
   const handleSubmit = async () => {
     console.log('Selected Date:', date);
     console.log('Selected Option:', selectedOption);
+    console.log('Selected Graph:', selectedGraph);
 
     const dateYMD = date.toISOString().slice(0, 10);
 
     console.log('Selected Date', dateYMD);
     const token = await AsyncStorage.getItem('token');
-    console.log(token)
+    console.log(token);
 
     let headersList = {
-      "Accept": "*/*",
-      "Authentication": `${token}`,
-      "Authorization": `Bearer ${token}`
-    }
+      Accept: '*/*',
+      Authentication: `${token}`,
+      Authorization: `Bearer ${token}`,
+    };
 
-    const response = await api.get(`/products/1/consumptions?type=${selectedOption}&date=${dateYMD}`, { headers: headersList });
+    const response = await api.get(
+      `/products/1/consumptions?type=${selectedOption}&date=${dateYMD}`,
+      { headers: headersList }
+    );
     console.log(response.data);
 
-    // const resultMock = {
-    //   consumptionInKw: {
-    //     data: [79, 12, 45, 64, 92, 30, 57, 81, 9, 37, 68, 23, 98, 51, 76],
-    //     averag: 15,
-    //     mode: 10
-    //   },
-
-    //   consumptionInMoney: {
-    //     data: [79, 12, 45, 64, 92, 30, 57, 81, 9, 37, 68, 23, 98, 51, 76],
-    //     averag: 15,
-    //     mode: 10
-    //   }
-    // }
-
-    //console.log('Response:', resultMock);
-
     setChartVisible(true);
-    setChartData(response.data.consumptionsInKw.data.slice(0, 18));
+
+    const chartData =
+      selectedGraph === 'money'
+        ? response.data.consumptionsInMoney.data
+        : response.data.consumptionsInKw.data;
+    setChartData(chartData.slice(0, 18));
+
   };
 
   const options = [
@@ -72,6 +73,19 @@ const Main = () => {
     },
   ];
 
+  const graphs = [
+    {
+      label: 'Dinheiro',
+      value: 'money',
+    },
+    {
+      label: 'kWh',
+      value: 'kWh',
+    },
+  ];
+
+  const formattedDate = date ? date.toDateString() : 'Selecione a data';
+
   return (
     <View style={styles.container}>
       <View style={styles.topContainer}>
@@ -83,15 +97,14 @@ const Main = () => {
             date={date}
             mode="date"
             onConfirm={(date) => {
-              setOpen(false)
-              setDate(date)
+              setOpen(false);
+              setDate(date);
             }}
             onCancel={() => {
-              setOpen(false)
+              setOpen(false);
             }}
           />
         </View>
-
         <View style={[styles.optionsContainer, styles.horizontalOptionsContainer]}>
           {options.map((option, index) => (
             <TouchableOpacity
@@ -110,6 +123,29 @@ const Main = () => {
                 ]}
               >
                 {option.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        <View style={[styles.graphContainer, styles.horizontalGraphContainer]}>
+          {graphs.map((graph, index) => (
+            <TouchableOpacity
+              key={graph.value}
+              style={[
+                styles.graphButton,
+                selectedGraph === graph.value && styles.selectedGraphButton,
+                index < graphs.length - 1 && { marginRight: 80 },
+              ]}
+              onPress={() => handleGraphChange(graph.value)}
+            >
+              <Text
+                style={[
+                  styles.graphText,
+                  selectedGraph === graph.value && styles.selectedGraphText,
+                ]}
+              >
+                {graph.label}
               </Text>
             </TouchableOpacity>
           ))}
@@ -197,10 +233,31 @@ const styles = StyleSheet.create({
   selectedOptionText: {
     color: 'white',
   },
+  graphContainer: {
+    flexDirection: 'column',
+    alignItems: 'center',
+  },
+  horizontalGraphContainer: {
+    flexDirection: 'row',
+  },
+  graphButton: {
+    padding: 8,
+    backgroundColor: '#eee',
+    borderRadius: 4,
+  },
+  selectedGraphButton: {
+    backgroundColor: 'blue',
+  },
+  graphText: {
+    fontSize: 16,
+  },
+  selectedGraphText: {
+    color: 'white',
+  },
   buttonContainer: {
     width: '80%',
     marginTop: 8,
-    marginBottom: 16
+    marginBottom: 16,
   },
   chartContainer: {
     marginTop: 16,
@@ -215,7 +272,7 @@ const styles = StyleSheet.create({
     width: '100%',
     marginTop: 8,
     marginBottom: 16,
-  }
+  },
 });
 
 export default Main;
